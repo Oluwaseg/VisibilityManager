@@ -52,7 +52,9 @@ const updateReposSchema = Joi.object({
   repos: Joi.array().items(Joi.string()).required(),
   makePrivate: Joi.boolean().required(),
 });
-
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).send("Welcome to the GitHub Repo Manager API!");
+});
 app.post("/update-repos", async (req: Request, res: Response) => {
   const { username, token, repos, makePrivate } = req.body;
 
