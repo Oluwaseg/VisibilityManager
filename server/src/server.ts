@@ -4,27 +4,21 @@ import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import Joi from "joi";
-import winston from "winston";
+import morgan from "morgan";
 
 dotenv.config();
 
 const app = express();
 
-const logger = winston.createLogger({
-  level: "error",
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
-});
+// Setup Morgan to log requests
+app.use(morgan("dev"));
 
+// Rate limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests, please try again later.",
 });
-
 app.use(apiLimiter);
 
 // CORS configuration
@@ -52,9 +46,13 @@ const updateReposSchema = Joi.object({
   repos: Joi.array().items(Joi.string()).required(),
   makePrivate: Joi.boolean().required(),
 });
+
+// Basic route
 app.get("/", (req: Request, res: Response) => {
   res.status(200).send("Welcome to the GitHub Repo Manager API!");
 });
+
+// Update repositories
 app.post("/update-repos", async (req: Request, res: Response) => {
   const { username, token, repos, makePrivate } = req.body;
 
@@ -64,7 +62,6 @@ app.post("/update-repos", async (req: Request, res: Response) => {
     !Array.isArray(repos) ||
     typeof makePrivate !== "boolean"
   ) {
-    logger.error("Invalid request data", { body: req.body });
     return res.status(400).send("Invalid request");
   }
 
@@ -80,18 +77,19 @@ app.post("/update-repos", async (req: Request, res: Response) => {
         await axios.patch(updateUrl, { private: makePrivate }, { headers });
       })
     );
-    logger.info("Repositories updated successfully", { username, repos });
     res.status(200).send("Repositories updated successfully");
   } catch (error: any) {
     const message =
       error.response?.data?.message || error.message || "Unknown error";
-    logger.error("Failed to update repositories", { error: message });
     res.status(500).send(`Failed to update repositories: ${message}`);
+    // Log error using Morgan
+    console.error(`Failed to update repositories: ${message}`);
   }
 });
 
+// Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.error(`Server error: ${err.message}`);
+  console.error(`Server error: ${err.message}`);
   res.status(500).send("Internal Server Error");
 });
 
