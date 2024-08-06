@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Pagination from "./components/Pagination";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface FormData {
   username: string;
@@ -13,7 +15,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const App: React.FC = () => {
   const [repos, setRepos] = useState<string[]>([]);
   const [selectedRepos, setSelectedRepos] = useState<string[]>([]);
-  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -37,7 +38,6 @@ const App: React.FC = () => {
     if (!username || !token) return;
 
     setLoading(true);
-    setApiError(null);
 
     try {
       const response = await axios.get(
@@ -56,7 +56,7 @@ const App: React.FC = () => {
         setTotalPages(pages ? parseInt(pages[1], 10) : 1);
       }
     } catch (error) {
-      setApiError(
+      toast.error(
         "Failed to fetch repositories. Please check your credentials."
       );
     } finally {
@@ -65,8 +65,6 @@ const App: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setApiError(null);
-
     const makePrivate = data.makePrivate === "true";
 
     try {
@@ -76,10 +74,10 @@ const App: React.FC = () => {
         repos: selectedRepos,
         makePrivate,
       });
-      alert("Repositories updated successfully");
+      toast.success("Repositories updated successfully");
     } catch (error) {
       console.error("Failed to update repositories", error);
-      setApiError("Failed to update repositories. Please try again.");
+      toast.error("Failed to update repositories. Please try again.");
     }
   };
 
@@ -140,8 +138,6 @@ const App: React.FC = () => {
         >
           Fetch Repositories
         </button>
-
-        {apiError && <div className="text-red-500 mb-4">{apiError}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center">
@@ -219,6 +215,8 @@ const App: React.FC = () => {
           Update Repositories
         </button>
       </form>
+
+      <ToastContainer />
     </div>
   );
 };
