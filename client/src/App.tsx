@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+    setSubmitting(true);
     const makePrivate = data.makePrivate === "true";
 
     try {
@@ -78,6 +80,8 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Failed to update repositories", error);
       toast.error("Failed to update repositories. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -106,6 +110,7 @@ const App: React.FC = () => {
             className={`border p-3 rounded w-full mt-1 bg-[#415a77] placeholder-[#9ca3af] text-[#f3f3f3] ${
               errors.username ? "border-red-500" : ""
             }`}
+            disabled={submitting}
           />
           {errors.username && (
             <p className="text-red-500 text-sm mt-1">
@@ -125,6 +130,7 @@ const App: React.FC = () => {
             className={`border p-3 rounded w-full mt-1 bg-[#415a77] placeholder-[#9ca3af] text-[#f3f3f3] ${
               errors.token ? "border-red-500" : ""
             }`}
+            disabled={submitting}
           />
           {errors.token && (
             <p className="text-red-500 text-sm mt-1">{errors.token.message}</p>
@@ -134,7 +140,10 @@ const App: React.FC = () => {
         <button
           type="button"
           onClick={() => fetchRepos(currentPage)}
-          className="bg-transparent text-white border border-gray-200 px-4 py-2 rounded w-full mb-4 hover:bg-[#e0e1dd] hover:text-[#0d1b2a] transition"
+          className={`bg-transparent text-white border border-gray-200 px-4 py-2 rounded w-full mb-4 hover:bg-[#e0e1dd] hover:text-[#0d1b2a] transition ${
+            submitting ? "cursor-not-allowed opacity-50" : ""
+          }`}
+          disabled={submitting}
         >
           Fetch Repositories
         </button>
@@ -163,6 +172,7 @@ const App: React.FC = () => {
                         );
                       }}
                       className="mr-2"
+                      disabled={submitting}
                     />
                     <span>{repo}</span>
                   </div>
@@ -193,6 +203,7 @@ const App: React.FC = () => {
                 value="true"
                 {...register("makePrivate", { required: true })}
                 className="form-radio text-[#f3f3f3]"
+                disabled={submitting}
               />
               <span className="ml-2 text-[#e0e1dd]">Make Private</span>
             </label>
@@ -202,6 +213,7 @@ const App: React.FC = () => {
                 value="false"
                 {...register("makePrivate", { required: true })}
                 className="form-radio text-[#f3f3f3]"
+                disabled={submitting}
               />
               <span className="ml-2 text-[#e0e1dd]">Make Public</span>
             </label>
@@ -210,7 +222,10 @@ const App: React.FC = () => {
 
         <button
           type="submit"
-          className="bg-[#386641] text-white px-4 py-2 rounded mt-4 w-full hover:bg-[#6a994e] transition"
+          className={`bg-[#386641] text-white px-4 py-2 rounded mt-4 w-full hover:bg-[#6a994e] transition ${
+            submitting ? "cursor-not-allowed opacity-50" : ""
+          }`}
+          disabled={submitting}
         >
           Update Repositories
         </button>
